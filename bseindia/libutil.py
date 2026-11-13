@@ -24,8 +24,12 @@ header = {
                        "AppleWebKit/537.36 (KHTML, like Gecko) "
                        "Chrome/120.0.0.0 Safari/537.36"),
         "Referer": "https://www.bseindia.com/",
+        "Origin": "https://www.bseindia.com",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-site",
+        "sec-fetch-dest": "empty",
     }
 
 
@@ -192,7 +196,16 @@ def _download_security_master():
         params={'segment': 'Equity', 'status': '', 'Group': '', 'Scripcode': ''},
     )
     if response.status_code != 200:
-        raise NSEdataNotFound('BSE security master is not available')
+        raise NSEdataNotFound(
+            f'BSE security master is not available (status={response.status_code})'
+        )
+    content_type = response.headers.get('Content-Type', '')
+    body = response.text.lstrip('\ufeff').lstrip()
+    if 'text/csv' not in content_type.lower() or not body.startswith('Security Code,'):
+        raise NSEdataNotFound(
+            'BSE security master returned a non-CSV response '
+            f'(status={response.status_code}, content_type={content_type!r})'
+        )
     data_df = pd.read_csv(StringIO(response.text), usecols=range(9), index_col=False, engine='python')
     return _write_security_cache(data_df)
 

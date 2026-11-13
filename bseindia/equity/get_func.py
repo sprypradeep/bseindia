@@ -1,5 +1,6 @@
 from urllib.parse import quote
 import datetime as dt
+import time
 import zipfile
 from io import StringIO, BytesIO
 from bseindia.libutil import *
@@ -29,13 +30,29 @@ def get_equity_bhav_copy(trade_date: str):
     trade_date = dt.datetime.strptime(trade_date, dd_mm_yyyy)
     _url = 'https://www.bseindia.com/download/BhavCopy/Equity/BhavCopy_BSE_CM_0_0_0_'
     _payload = f"{str(trade_date.strftime('%Y%m%d'))}_F_0000.CSV"
-    try:
-        data_obj = requests.request("GET", _url + _payload, headers=header)
-        if data_obj.status_code != 200:
+    last_error = None
+    for attempt in range(3):
+        try:
+            data_obj = requests.request(
+                "GET", _url + _payload, headers=header, timeout=30
+            )
+        except requests.exceptions.RequestException as exc:
+            last_error = exc
+            if attempt < 2:
+                time.sleep(0.5 * (attempt + 1))
+                continue
+            raise NSEdataNotFound(f" Resource not available MSG: {exc}")
+        if data_obj.status_code == 200:
+            return data_obj.content
+        if data_obj.status_code < 500:
             raise NSEdataNotFound(f" equities_bhav_copy not available for {trade_date}")
-    except Exception as e:
-        raise NSEdataNotFound(f" Resource not available MSG: {e}")
-    return data_obj.content
+        last_error = NSEdataNotFound(
+            f" equities_bhav_copy not available for {trade_date} "
+            f"(status={data_obj.status_code})"
+        )
+        if attempt < 2:
+            time.sleep(0.5 * (attempt + 1))
+    raise last_error
 
 
 def get_equity_turnover() -> pd.DataFrame:
