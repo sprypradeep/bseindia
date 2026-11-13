@@ -71,3 +71,13 @@ class TestBhavCopyContracts(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSecurityCachePath(unittest.TestCase):
+    def test_env_overrides_cache_path(self):
+        import os
+        with unittest.mock.patch.dict(os.environ, {"BSE_SECURITY_CACHE_PATH": "/tmp/x.csv"}):
+            import importlib
+            import bseindia.libutil as libutil
+            reloaded = importlib.reload(libutil)
+            self.assertEqual(str(reloaded.SECURITY_CACHE_PATH), "/tmp/x.csv")

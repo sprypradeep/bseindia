@@ -1,4 +1,5 @@
 import html
+import os
 import re
 from datetime import datetime, timedelta, date
 from io import StringIO
@@ -14,7 +15,9 @@ from bseindia.constants import *
 logger = mylogger(logging.getLogger(__name__))
 
 PACKAGE_DIR = Path(__file__).resolve().parent
-SECURITY_CACHE_PATH = PACKAGE_DIR / "bse_security_list.csv"
+SECURITY_CACHE_PATH = Path(
+    os.environ.get("BSE_SECURITY_CACHE_PATH", str(PACKAGE_DIR / "bse_security_list.csv"))
+)
 SECURITY_MASTER_URL = "https://api.bseindia.com/BseIndiaAPI/api/LitsOfScripCSVDownload/w"
 SMART_SEARCH_URL = "https://api.bseindia.com/BseIndiaAPI/api/ListScripSmartSearch/w"
 TRADING_HOLIDAY_URL = "https://www.bseindia.com/static/markets/marketinfo/listholi.aspx/1000"

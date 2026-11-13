@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name='bseindia',
     packages=setuptools.find_packages(),
-    version='1.1.1',
+    version='1.1.2',
     include_package_data=True,
     description='library to get BSE India data',
     long_description=long_description,
